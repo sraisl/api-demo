@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: 
+        - main
+        - feature/*
+        - hf/*
+        - release/*
+  pull_request:
+    branches: 
+        - main
+        - feature/*
+        - hf/*
+        - release/*
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Validate GitLab Flow branch name
+        shell: bash
+        env:
+          BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          case "$BRANCH_NAME" in
+            main|develop|feature/*|release/*|hotfix/*)
+              echo "Branch '$BRANCH_NAME' matches the GitLab Flow policy."
+              ;;
+            *)
+              echo "Branch '$BRANCH_NAME' does not match the GitLab Flow policy."
+              echo "Allowed names: main, develop, feature/*, release/*, hotfix/*"
+              exit 1
+              ;;
+          esac
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+            enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Run tests
+        run: uv run pytest
