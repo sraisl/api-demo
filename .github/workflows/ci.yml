@@ -65,4 +65,4 @@ jobs:
       - *install_dependencies_step
 
       - name: Run integration tests
-        run: uv run pytest -m integration
+        run: uv run pytest -m integration >> $GITHUB_STEP_SUMMARY
